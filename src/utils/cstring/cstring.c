@@ -60,7 +60,6 @@ void string_destroy(cstring** string){
     if (!string || !*string){
         return;
     }
-    printf("string destroy\n");
 
     vector_destroy(&((*string)->chars));
     free(*string);

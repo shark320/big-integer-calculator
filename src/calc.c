@@ -8,23 +8,29 @@
 
 
 int main (){
-    vector* tokens;
-    size_t i;
-    char operands[] = {'+','*','-','/'};
-    cstring* string = string_init("123");
+    bigint* number1, *number2, *result;
+    cstring* string1, *string2, *nstring;
 
-    tokens = expression_parse(string,operands);
-    for(i=0;i<vector_count(tokens);++i){
-        char* c = get_chars(*((cstring**)vector_at(tokens,i)));
-        printf("%s\n",c);
-    }
-    for(i=0;i<vector_count(tokens);++i){
-        printf("%s\n",get_chars(*((cstring**)vector_at(tokens,i))));
-    }
+    string1 = string_init("923");
 
-    
-    vector_destroy(&tokens);
-    string_destroy(&string);
+    string2 = string_init("128");
+
+    number1 = bigint_init(string1, POSITIVE);
+
+    number2 = bigint_init(string2, POSITIVE);
+
+    result = l_sum(number1, number2);
+
+    nstring = bigint_to_string(result);
+
+    printf("number: %s\n", get_chars(nstring));
+
+    string_destroy(&string1);
+    string_destroy(&string2);
+    string_destroy(&nstring);
+    bigint_destroy(&number1);
+    bigint_destroy(&number2);
+    bigint_destroy(&result);
 
     return EXIT_SUCCESS;
 }

@@ -105,6 +105,7 @@ void *vector_at(const vector *v, const size_t at);
  */
 int vector_push_back(vector *v, const void *item);
 
+
 /**
  * @brief Funkce zadanému vektoru odebere vlastnictví udržovaného ukazatele na dynamicky
  *        alokovaný buffer. 
@@ -117,5 +118,9 @@ void *vector_giveup(vector *v);
 int vector_push(vector* v, const void* item, const size_t index);
 
 vector* vector_init_data (const size_t item_size, const vec_it_dealloc_type deallocator, void** data, int data_count);
+
+vector* vector_copy (const vector* to_copy);
+
+int vector_reverse(vector* v);
 
 #endif

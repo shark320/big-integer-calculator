@@ -108,8 +108,9 @@ int vector_push_back(vector *v, const void *item){
     ++v->count;
 
     return 1;
-
 }
+
+
 
 void vector_destroy(vector **v){
     
@@ -197,4 +198,68 @@ vector* vector_init_data (const size_t item_size, const vec_it_dealloc_type deal
     }
 
     return new_vector;
+}
+
+vector* vector_copy (const vector* to_copy){
+    vector* copy;
+
+    if (!to_copy){
+        return NULL;
+    }
+
+    copy = vector_create(to_copy->item_size, to_copy->deallocator);
+
+    if (!copy){
+        return NULL;
+    }
+
+    copy->count = to_copy->count;
+    
+    if (!vector_realloc(copy, to_copy->capacity)){
+        free(copy);
+        return NULL;
+    }
+
+    if(!memcpy(copy->data, to_copy->data, copy->item_size*copy->count)){
+        vector_destroy(&copy);
+        return NULL;
+    }
+
+    return copy;
+}
+
+int vector_reverse(vector* v){
+    size_t i,len;
+    void* tmp,*i1,*i2;
+
+    #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            free(tmp);   \
+            return 0;                     \
+        }
+
+    if (!v){
+        return 0;
+    }
+
+    tmp = malloc(v->item_size);
+
+    if (!tmp){
+        return 0;
+    }
+
+    len = v->count;
+
+    for (i=0;i<len/2;++i){
+        i1 = ((void*)((char*)v->data + (i * v->item_size)));
+        i2 = ((void*)((char*)v->data + ((len-i-1) * v->item_size)));
+        EXIT_IF_NOT(memcpy(tmp,i1,v->item_size));
+        EXIT_IF_NOT(memcpy(i1,i2,v->item_size));
+        EXIT_IF_NOT(memcpy(i2,tmp,v->item_size));
+    }
+
+    free(tmp);
+
+    return 1;
+
 }
