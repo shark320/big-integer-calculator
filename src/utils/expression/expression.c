@@ -26,7 +26,7 @@ vector* expression_parse(cstring* string, char* operands){
         return NULL;
     }
 
-    tokens = vector_create(sizeof(cstring), string_destroy);
+    tokens = vector_create(sizeof(cstring*), (vec_it_dealloc_type)string_destroy);
 
     if (!operands){
         vector_push_back(tokens, string);
@@ -38,8 +38,15 @@ vector* expression_parse(cstring* string, char* operands){
     for(i=0;i<string_len;++i){
         c=string_char_at(string,i);
         if (contains(operands, c)){
-            vector_push_back(tokens, tmp);
+            vector_push_back(tokens, &tmp);
+            tmp = string_create();
+            string_append(tmp,c);
+            vector_push_back(tokens,&tmp);
+            tmp = string_create();
+        }else{
+            string_append(tmp,c);
         }
     }
-
+    vector_push_back(tokens, &tmp);
+    return tokens;
 }

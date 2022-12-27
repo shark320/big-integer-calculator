@@ -9,6 +9,7 @@
 #define _VECTOR_H
 
 #include <stddef.h>
+#include <stdio.h>
 
 /** @brief Násobitel zvětšení pole při realokaci. */
 #define VECTOR_SIZE_MULT 2

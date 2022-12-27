@@ -112,6 +112,7 @@ int vector_push_back(vector *v, const void *item){
 }
 
 void vector_destroy(vector **v){
+    
     size_t i;
     if (!v || !*v){
         return;

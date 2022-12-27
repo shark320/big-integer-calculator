@@ -26,9 +26,12 @@ cstring* string_create (){
 
     new_string->chars = vector_create(sizeof(char), NULL);
 
-    EXIT_IF_NOT(new_string->chars);
+    if (!new_string->chars){
+        free(new_string);
+        return NULL;
+    }
 
-    EXIT_IF_NOT(append_zero(new_string)==1);
+    EXIT_IF_NOT(append_zero(new_string));
 
 
     #undef EXIT_IF_NOT
@@ -57,10 +60,15 @@ void string_destroy(cstring** string){
     if (!string || !*string){
         return;
     }
+    printf("string destroy\n");
 
     vector_destroy(&((*string)->chars));
     free(*string);
     *string = NULL;
+}
+
+void string_destroy_t(void** string){
+    string_destroy((cstring**)string);
 }
 
 char* reverce_chars (char* chars){
@@ -108,7 +116,7 @@ int string_reverse(cstring** string){
     return 0;
 }
 
-size_t string_size(cstring* string){
+size_t string_size(const cstring* string){
     if (!string || !string->chars){
         return 0;
     }
@@ -126,7 +134,7 @@ int string_append (cstring* string, const char value){
     return append_zero(string);
 }
 
-char string_char_at(cstring* string, size_t index){
+char string_char_at(const cstring* string, size_t index){
     char* c;
 
     if (!string ||index>=string_size(string)){

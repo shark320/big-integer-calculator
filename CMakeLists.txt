@@ -10,6 +10,7 @@ add_executable(calc
     src/utils/futils/futils.c
     src/utils/vector/vector.c
     src/utils/cstring/cstring.c
+    src/utils/expression/expression.c
 )
 
 target_link_libraries(calc m)
