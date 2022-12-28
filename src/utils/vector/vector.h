@@ -123,4 +123,8 @@ vector* vector_copy (const vector* to_copy);
 
 int vector_reverse(vector* v);
 
+int vector_trim(vector* v);
+
+int vector_resize(vector* v, const size_t size);
+
 #endif

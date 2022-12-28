@@ -60,17 +60,6 @@ int vector_realloc(vector *v, const size_t new_capacity){
         return 0;
     }
 
-/*
-    new_data = malloc(v->item_size*new_capacity);
-
-    if (!new_data){
-        return 0;
-    }
-
-    memcpy(new_data,v->data, v->item_size * v->count);
-
-    free(v->data);
-*/
     new_data = realloc(v->data, v->item_size*new_capacity);
 
     if (!new_data){
@@ -262,4 +251,36 @@ int vector_reverse(vector* v){
 
     return 1;
 
+}
+
+int vector_trim(vector* v){
+    void* new_data;
+
+    if (!v){
+        return 0;
+    }
+
+    if (vector_isempty(v)){
+        return 1;
+    }
+
+    return vector_resize(v,v->count);
+}
+
+int vector_resize(vector* v, const size_t size){
+    void* new_data;
+
+    if (!v){
+        return 0;
+    }
+
+    if (size > v->count){
+        if (!vector_realloc(v,size)){
+            return 0;
+        }
+    }
+
+    v->count = size;
+
+    return 1;
 }
