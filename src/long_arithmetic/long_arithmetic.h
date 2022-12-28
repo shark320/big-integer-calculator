@@ -51,7 +51,13 @@ bigint* l_sub_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_div (const bigint*  first, const bigint*  second);
 
+bigint* l_mult_abs (const bigint*  first, const bigint*  second);
+
 bigint* l_mult (const bigint*  first, const bigint*  second);
+
+bigint* bigint_get_n_first_digits (const bigint* value, size_t n);
+
+int l_mult_assign (bigint** first, const bigint*  second);
 
 cstring* bigint_to_string(const bigint* value);
 

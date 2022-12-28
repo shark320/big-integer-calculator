@@ -8,7 +8,7 @@
 
 
 int main (){
-    bigint* number1, *number2, *result;
+    bigint* number1, *number2,*number3, *result;
     cstring* string1, *string2, *nstring;
 
     string1 = string_init("108");
@@ -17,11 +17,16 @@ int main (){
 
     number1 = bigint_init(string1, POSITIVE);
 
-    number2 = bigint_init(string2, NEGATIVE);
+    number2 = bigint_init(string2, POSITIVE);
 
-    result = l_sum(number1, number2);
+    number3 = bigint_get_n_first_digits(number1, 0);
 
-    nstring = bigint_to_string(result);
+    result = l_mult(number1, number2);
+
+    l_mult_assign(&number1, number2);
+    l_mult_assign(&number1, number2);
+
+    nstring = bigint_to_string(number3);
 
     printf("number: %s\n", get_chars(nstring));
 
@@ -32,6 +37,7 @@ int main (){
     string_destroy(&nstring);
     bigint_destroy(&number1);
     bigint_destroy(&number2);
+    bigint_destroy(&number3);
     bigint_destroy(&result);
 
     return EXIT_SUCCESS;

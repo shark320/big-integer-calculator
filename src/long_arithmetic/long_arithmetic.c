@@ -283,6 +283,8 @@ bigint* l_sum_abs (const bigint*  first, const bigint* second){
         EXIT_IF_NOT(add_smaller_bignint(result,first));
     }
 
+    #undef EXIT_IF_NOT
+
     return result;
 }
 
@@ -353,15 +355,9 @@ int bigint_cmp_abs (const bigint* first, const bigint* second){
 }
 
 int bigint_cmp (const bigint* first, const bigint* second){
-    size_t len1,len2;
-    int i;
-    signed char d1,d2;
     if(!first || !second){
         return INT_MIN;
     }
-
-    len1 = bigint_size(first);
-    len2 = bigint_size(second);
 
     if (first->sign < second->sign){
         return LESS;
@@ -469,6 +465,8 @@ bigint* l_sub_abs (const bigint*  first, const bigint*  second){
         result->sign = NEGATIVE;
     }
 
+    #undef EXIT_IF_NOT
+
     return result;
 }
 
@@ -498,5 +496,130 @@ bigint* l_sub (const bigint*  first, const bigint*  second){
            return l_sub_abs(second, first);
         }
     }
+}
 
+bigint* l_mult_abs (const bigint*  first, const bigint*  second){
+    size_t len1, len2, i,j;
+    signed char d,d1,d2,mult,sum;
+    bigint* result;
+
+    if (!first || !second){
+        return 0;
+    }
+
+    result = bigint_zero();
+
+    if (!result){
+        return 0;
+    }
+    
+
+    len1 = bigint_size(first);
+    len2 = bigint_size(second);
+
+    for (j=0;j<len2;++j){
+        for (i=0; i<len1;++i){
+            d1 = bigint_digit_at(first, i);
+            d2 = bigint_digit_at(second, j);
+            if (d1==-1 || d2 == -1){
+                return 0;
+            }
+            mult=d1*d2;
+            if ( (i+j) == vector_count(result->digits)){
+                vector_push_back(result->digits,&mult);
+            }else{
+                d = bigint_digit_at(result, i+j);
+                if (d==-1){
+                    return 0;
+                }
+                sum = d + mult;
+                vector_push(result->digits, &sum, i+j);
+               
+            }
+        }
+        if (!fix_overflow(result)){
+            return 0;
+        }
+    }
+
+    return result;
+}
+
+bigint* l_mult (const bigint*  first, const bigint*  second){
+    bigint* result;
+
+    if (!first || !second){
+        return NULL;
+    }
+
+    result = l_mult_abs (first, second);
+
+    if (!result){
+        return NULL;
+    }
+
+    if (first->sign == second->sign){
+        result->sign = POSITIVE;
+    }else{
+        result->sign = NEGATIVE;
+    }
+
+    return result;
+}
+
+int l_mult_assign (bigint** first, const bigint*  second){
+    bigint* result;
+    if (!first || !*first || !second){
+        return 0;
+    }
+
+    result = l_mult(*first, second);
+
+    if (!result){
+        return 0;
+    }
+
+    bigint_destroy(first);
+
+    *first = result;
+
+    return 1;
+}
+
+bigint* bigint_get_n_first_digits (const bigint* value, size_t n){
+    bigint* new_number;
+    size_t len,i;
+    signed char d;
+
+    #define EXIT_IF(expression)     \
+        if ((expression)) {            \
+            bigint_destroy(&new_number);   \
+            return NULL;                     \
+        }
+
+    if (!value){
+        return NULL;
+    }
+
+    new_number = bigint_cretate();
+    if (!new_number){
+        return NULL;
+    }
+
+    len = bigint_size(value);
+
+    if (n>len){
+        return NULL;
+    }
+
+    for (i=len;(len-i)<n;--i){
+        d = bigint_digit_at(value,i-1);
+        EXIT_IF(d==-1);
+        EXIT_IF(!vector_push_back(new_number->digits,&d));
+    }
+
+    EXIT_IF(!vector_reverse(new_number->digits));
+
+    #undef EXIT_IF
+    return new_number;
 }
