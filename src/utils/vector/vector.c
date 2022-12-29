@@ -283,4 +283,23 @@ int vector_resize(vector* v, const size_t size){
     v->count = size;
 
     return 1;
+
+}
+
+int vector_push_forward(vector* v, const void* item){
+    if (!v || !item){
+        return 0;
+    }
+
+    if (!vector_reverse(v)){
+        return 0;
+    }
+
+    vector_push_back(v,item);
+
+    if (!vector_reverse(v)){
+        return 0;
+    }
+
+    return 1;
 }

@@ -1,7 +1,7 @@
 
 #include "long_arithmetic.h"
 
-bigint* bigint_cretate (){
+bigint* bigint_create (){
     bigint* new_number;
 /*     int zero = 0; */
 
@@ -39,7 +39,7 @@ bigint* bigint_init_chars (const char* value, const short int sign){
     }
 
     len = strlen(value);
-    new_number = bigint_cretate();
+    new_number = bigint_create();
     if (!new_number){
         return NULL;
     }
@@ -64,6 +64,39 @@ bigint* bigint_init (const cstring* value, const short int sign){
     bigint* new_number;
 
     new_number = bigint_init_chars(get_chars(value), sign);
+
+    return new_number;
+}
+
+bigint* bigint_init_long (long value){
+    bigint* new_number;
+    char d;
+
+    if (!value){
+        return NULL;
+    }
+
+    new_number = bigint_create();
+    if (!new_number){
+        return NULL;
+    }
+
+    if (value<0){
+        new_number->sign = NEGATIVE;
+    }else{
+        new_number->sign = POSITIVE;
+    }
+
+    value = abs(value);
+
+    do{
+        d = value % 10;
+        value /= 10;
+        if (!vector_push_back(new_number->digits, &d)){
+            bigint_destroy(&new_number);
+            return NULL;
+        }
+    }while(value != 0);
 
     return new_number;
 }
@@ -156,7 +189,7 @@ bigint* bigint_copy (const bigint* to_copy){
         return NULL;
     }
 
-    copy = bigint_cretate();
+    copy = bigint_create();
 
     if (!copy){
         return NULL;
@@ -315,6 +348,25 @@ bigint* l_sum (const bigint*  first, const bigint* second){
     }
 }
 
+int l_sum_assign (bigint**  first, const bigint* second){
+     bigint* result;
+    if (!first || !*first || !second){
+        return 0;
+    }
+
+    result = l_sum(*first, second);
+
+    if (!result){
+        return 0;
+    }
+
+    bigint_destroy(first);
+
+    *first = result;
+
+    return 1;
+}
+
 int bigint_cmp_abs (const bigint* first, const bigint* second){
     size_t len1,len2;
     int i;
@@ -380,14 +432,12 @@ int fix_borrow (bigint* value){
     len = bigint_size(value);
 
     for(i=0;i<len;++i){
-        if ((d = bigint_digit_at(value,i))==-1){
-            return 0;
-        }
+        d = bigint_digit_at(value,i);
         if (d<0){
             if (i==len-1){
                 return 0;
             }
-            borrow = abs(d/10) + 1;
+            borrow = abs(d)/10 + 1;
             *((char*)vector_at(value->digits,i))+=borrow*10;
             *((char*)vector_at(value->digits,i+1))-=borrow;
         }
@@ -465,6 +515,9 @@ bigint* l_sub_abs (const bigint*  first, const bigint*  second){
         result->sign = NEGATIVE;
     }
 
+z
+    EXIT_IF_NOT(bigint_trim(result));
+
     #undef EXIT_IF_NOT
 
     return result;
@@ -496,6 +549,44 @@ bigint* l_sub (const bigint*  first, const bigint*  second){
            return l_sub_abs(second, first);
         }
     }
+}
+
+int l_sub_assign (bigint**  first, const bigint*  second){
+    bigint* result;
+    if (!first || !*first || !second){
+        return 0;
+    }
+
+    result = l_sub(*first, second);
+
+    if (!result){
+        return 0;
+    }
+
+    bigint_destroy(first);
+
+    *first = result;
+
+    return 1;
+}
+
+int l_sub_assign_abs (bigint**  first, const bigint*  second){
+    bigint* result;
+    if (!first || !*first || !second){
+        return 0;
+    }
+
+    result = l_sub_abs(*first, second);
+
+    if (!result){
+        return 0;
+    }
+
+    bigint_destroy(first);
+
+    *first = result;
+
+    return 1;
 }
 
 bigint* l_mult_abs (const bigint*  first, const bigint*  second){
@@ -586,6 +677,17 @@ int l_mult_assign (bigint** first, const bigint*  second){
     return 1;
 }
 
+bigint* l_mult_long (const bigint*  first, const long second){
+    bigint *result, *long_number;
+
+    long_number = bigint_init_long (second);
+
+    result =  l_mult(first,long_number);
+    bigint_destroy(&long_number);
+
+    return result;
+}
+
 bigint* bigint_get_n_first_digits (const bigint* value, size_t n){
     bigint* new_number;
     size_t len,i;
@@ -601,7 +703,7 @@ bigint* bigint_get_n_first_digits (const bigint* value, size_t n){
         return NULL;
     }
 
-    new_number = bigint_cretate();
+    new_number = bigint_create();
     if (!new_number){
         return NULL;
     }
@@ -622,4 +724,103 @@ bigint* bigint_get_n_first_digits (const bigint* value, size_t n){
 
     #undef EXIT_IF
     return new_number;
+}
+
+int l_div_simple (const bigint* first, const bigint* second){
+    bigint* approx;
+    int count = 0, cmp;
+
+    #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            bigint_destroy(&approx);   \
+            return -1;                     \
+        }
+
+    if (!first || !second){
+        return -1;
+    }
+
+    approx = bigint_zero();
+
+    if (!approx){
+        return -1;
+    }
+
+    for(;;){
+        ++count;
+        EXIT_IF_NOT(l_sum_assign(&approx, second));
+        cmp = bigint_cmp_abs(first,approx);
+        if (cmp == EQUALS){
+            break;
+        }
+        if (cmp == LESS){
+            --count;
+            break;
+        }
+    }
+
+    bigint_destroy(&approx);
+
+    #undef EXIT_IF_NOT
+    return count;
+}
+
+bigint* l_div_abs (const bigint* first, const bigint* second){
+    bigint* result, *tmp,*approx;
+    size_t len1,i;
+    int cmp, div_simple;
+    signed char d, zero = 0;
+
+     #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            bigint_destroy(&result);   \
+            bigint_destroy(&tmp);   \
+            return NULL;                     \
+        }
+
+    if (!first || !second){
+        return NULL;
+    }
+
+    cmp = bigint_cmp_abs(first,second);
+
+    if (cmp==EQUALS){
+        return bigint_init_chars("1",POSITIVE);
+    }
+
+    if (cmp==LESS){
+        return bigint_zero();
+    }
+
+    result = bigint_create();
+    tmp = bigint_create();
+
+    if (!result || !tmp){
+        return 0;
+    }
+
+    len1 = bigint_size(first);
+
+    for (i=len1;i>0;--i){
+        d = bigint_digit_at(first,i-1);
+        EXIT_IF_NOT (vector_push_forward(tmp->digits,&d));
+        cmp = bigint_cmp_abs(tmp,second);
+        if (cmp==GREATER || cmp==EQUALS){
+            div_simple = l_div_simple(tmp,second);
+            EXIT_IF_NOT(approx = l_mult_long(second,div_simple));
+            EXIT_IF_NOT (vector_push_back(result->digits, &div_simple));
+            EXIT_IF_NOT (l_sub_assign_abs(&tmp,approx));
+            bigint_destroy(&approx);
+        }else{
+            EXIT_IF_NOT (vector_push_back(result->digits, &zero));
+        }
+    }
+
+    bigint_destroy(&tmp);
+    EXIT_IF_NOT(vector_reverse(result->digits));
+    EXIT_IF_NOT(bigint_trim(result));
+
+    #undef EXIT_IF_NOT
+
+    return result;
 }

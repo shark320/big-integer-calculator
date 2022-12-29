@@ -19,13 +19,15 @@ typedef struct {
     signed char sign;
 }bigint;
 
-bigint* bigint_cretate ();
+bigint* bigint_create ();
 
 bigint* bigint_zero();
 
 bigint* bigint_init (const cstring* value, const short int sign);
 
 bigint* bigint_init_chars (const char* value, const short int sign);
+
+bigint* bigint_init_long ( long value);
 
 void bigint_destroy (bigint** value);
 
@@ -45,15 +47,25 @@ bigint* l_sum_abs (const bigint*  first, const bigint* second);
 
 bigint* l_sum (const bigint*  first, const bigint* second);
 
+int l_sum_assign (bigint**  first, const bigint* second);
+
 bigint* l_sub (const bigint*  first, const bigint*  second);
 
 bigint* l_sub_abs (const bigint*  first, const bigint*  second);
+
+int l_sub_assign (bigint**  first, const bigint*  second);
+
+int l_div_simple (const bigint* first, const bigint* second);
+
+bigint* l_div_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_div (const bigint*  first, const bigint*  second);
 
 bigint* l_mult_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_mult (const bigint*  first, const bigint*  second);
+
+bigint* l_mult_long (const bigint*  first, const long second);
 
 bigint* bigint_get_n_first_digits (const bigint* value, size_t n);
 

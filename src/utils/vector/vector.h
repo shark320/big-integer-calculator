@@ -117,6 +117,8 @@ void *vector_giveup(vector *v);
 
 int vector_push(vector* v, const void* item, const size_t index);
 
+int vector_push_forward(vector* v, const void* item);
+
 vector* vector_init_data (const size_t item_size, const vec_it_dealloc_type deallocator, void** data, int data_count);
 
 vector* vector_copy (const vector* to_copy);

@@ -11,26 +11,26 @@ int main (){
     bigint* number1, *number2,*number3, *result;
     cstring* string1, *string2, *nstring;
 
-    string1 = string_init("108");
+    string1 = string_init("123456789123456789");
 
-    string2 = string_init("923");
+    string2 = string_init("56489641");
 
-    number1 = bigint_init(string1, POSITIVE);
+/*     number1 = bigint_init_long(1858);
 
-    number2 = bigint_init(string2, POSITIVE);
+    number2 = bigint_init_long(1857); */
 
-    number3 = bigint_get_n_first_digits(number1, 0);
+    number1 = bigint_init_chars ("123456789123456789",POSITIVE);
+    number2 = bigint_init_chars ("56489641",POSITIVE);
 
-    result = l_mult(number1, number2);
+    number3 = bigint_get_n_first_digits(number1, 2);
 
-    l_mult_assign(&number1, number2);
-    l_mult_assign(&number1, number2);
+    result = l_div_abs(number1, number2);
 
-    nstring = bigint_to_string(number3);
+    nstring = bigint_to_string(result);
 
     printf("number: %s\n", get_chars(nstring));
 
-    printf("%d\n", bigint_cmp(number1,number2));
+/*     printf("%d\n", l_div_simple(number1,number2)); */
 
     string_destroy(&string1);
     string_destroy(&string2);
