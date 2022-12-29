@@ -23,47 +23,70 @@ bigint* bigint_create (){
     return new_number;
 }
 
-bigint* bigint_init_chars (const char* value, const short int sign){
+bigint* bigint_init_chars (const char* value){
     size_t i;
     size_t len;
     char c, num;
     bigint* new_number;
 
+      #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            bigint_destroy(&new_number);   \
+            return NULL;                     \
+        }
+
     if (!value){
         return NULL;
     }
 
-    /* underfined big integer sign */
-    if (sign==0){
+    len = strlen(value);
+
+    if (len==0){
         return NULL;
     }
 
-    len = strlen(value);
     new_number = bigint_create();
     if (!new_number){
         return NULL;
     }
 
-    new_number->sign = sign<0?NEGATIVE:POSITIVE;
+    i=0;
+    c = value[i];
+   
 
-    for (i=0;i<len;++i){
-        c = value[i];
-        num = c - '0';
-        vector_push_back(new_number->digits,&num);
+    if (c=='-'){
+        new_number->sign = NEGATIVE;
+        ++i;
+    }else if (c=='+'){
+        new_number->sign = POSITIVE;
+        ++i;
     }
 
-    vector_reverse(new_number->digits);
 
-    bigint_trim(new_number);
+    for (;i<len;++i){
+        c = value[i];
+        num = c - '0';
+        EXIT_IF_NOT(vector_push_back(new_number->digits,&num));
+    }
+
+    EXIT_IF_NOT(vector_reverse(new_number->digits));
+
+    EXIT_IF_NOT(bigint_trim(new_number));
+
+    if (bigint_is_zero(new_number)){
+        new_number->sign = POSITIVE;
+    }
+
+    #undef EXIT_IF_NOT
 
     return new_number;
 }
 
 
-bigint* bigint_init (const cstring* value, const short int sign){
+bigint* bigint_init (const cstring* value){
     bigint* new_number;
 
-    new_number = bigint_init_chars(get_chars(value), sign);
+    new_number = bigint_init_chars(get_chars(value));
 
     return new_number;
 }
@@ -98,13 +121,17 @@ bigint* bigint_init_long (long value){
         }
     }while(value != 0);
 
+    if (bigint_is_zero(new_number)){
+        new_number->sign = POSITIVE;
+    }
+
     return new_number;
 }
 
 bigint* bigint_zero(){
     bigint* zero_number;
 
-    zero_number = bigint_init_chars("0", POSITIVE);
+    zero_number = bigint_init_chars("0");
 
     return zero_number;
 }
@@ -257,6 +284,51 @@ int fix_overflow(bigint* value){
     return 1;
 }
 
+int bigint_is_zero(const bigint* value){
+    if (!value){
+        return 0;
+    }
+
+    if (bigint_size(value) == 1 && bigint_digit_at(value,0)==0){
+        return 1;
+    }
+
+    return 0;
+}
+
+int bigint_is_one (const bigint* value){
+    if (!value){
+        return 0;
+    }
+
+    if (bigint_size(value) == 1 && bigint_digit_at(value,0)==1){
+        return 1;
+    }
+
+    return 0;
+}
+
+int l_inc(bigint* value){
+    signed char d,sum;
+
+    if (!value){
+        return 0;
+    }
+
+
+        d = bigint_digit_at(value,0);
+        if (d==-1){
+            return 0;
+        }
+        sum = d+1;
+        if (!vector_push(value->digits, &sum,0)){
+            return 0;
+        }
+    
+
+    return fix_overflow(value);
+}
+
 int add_smaller_bignint (bigint* first, const bigint* second){
     size_t len1,len2,i;
     signed char d1,d2,sum;
@@ -279,7 +351,9 @@ int add_smaller_bignint (bigint* first, const bigint* second){
             return 0;
         }
         sum = d1+d2;
-        vector_push(first->digits, &sum,i);
+        if (!vector_push(first->digits, &sum,i)){
+            return 0;
+        }
     }
 
     return fix_overflow(first);
@@ -515,7 +589,7 @@ bigint* l_sub_abs (const bigint*  first, const bigint*  second){
         result->sign = NEGATIVE;
     }
 
-z
+
     EXIT_IF_NOT(bigint_trim(result));
 
     #undef EXIT_IF_NOT
@@ -598,6 +672,14 @@ bigint* l_mult_abs (const bigint*  first, const bigint*  second){
         return 0;
     }
 
+    if (bigint_is_zero(second)){
+        return bigint_zero();
+    }
+
+    if (bigint_is_one(second)){
+        return bigint_copy(first);
+    }
+
     result = bigint_zero();
 
     if (!result){
@@ -631,6 +713,11 @@ bigint* l_mult_abs (const bigint*  first, const bigint*  second){
         if (!fix_overflow(result)){
             return 0;
         }
+    }
+
+    if (!bigint_trim(result)){
+        bigint_destroy(&result);
+        return NULL;
     }
 
     return result;
@@ -710,9 +797,8 @@ bigint* bigint_get_n_first_digits (const bigint* value, size_t n){
 
     len = bigint_size(value);
 
-    if (n>len){
-        return NULL;
-    }
+
+    EXIT_IF (len<n);
 
     for (i=len;(len-i)<n;--i){
         d = bigint_digit_at(value,i-1);
@@ -785,7 +871,7 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     cmp = bigint_cmp_abs(first,second);
 
     if (cmp==EQUALS){
-        return bigint_init_chars("1",POSITIVE);
+        return bigint_init_chars("1");
     }
 
     if (cmp==LESS){
@@ -823,4 +909,127 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     #undef EXIT_IF_NOT
 
     return result;
+}
+
+bigint* l_div (const bigint*  first, const bigint*  second){
+    bigint* result;
+
+    result = l_div_abs(first, second);
+
+    if (!result){
+        return NULL;
+    }
+
+    if (first->sign == second->sign){
+        result->sign = POSITIVE;
+    }else{
+        result->sign = NEGATIVE;
+    }
+
+    return result;
+}
+
+bigint* l_mod (const bigint* first, const bigint* second){
+    bigint* result, *div, *mult;
+
+    div = l_div(first,second);
+
+    if (!div){
+        return NULL;
+    }
+
+    mult = l_mult (div,second);
+
+    bigint_destroy(&div);
+
+    if (!mult){
+        return NULL;
+    }
+
+    result = l_sub(first,mult);
+
+    bigint_destroy(&mult);
+
+    if (!result){
+        return NULL;
+    }
+
+    return result;
+}
+
+bigint* l_pow (const bigint* first, const bigint* second){
+    bigint* result, *i;
+
+    i = bigint_zero();
+
+    if (!i){
+        return NULL;
+    }
+
+    result = bigint_init_chars("1");
+
+
+    if (!result){
+        bigint_destroy(&i);
+        return NULL;
+    }
+
+    for (;bigint_cmp(i,second)==LESS;){
+        if (!l_mult_assign(&result,first) || !l_inc(i)){
+             bigint_destroy(&i);
+             bigint_destroy(&result);
+            return NULL;
+        }
+    }
+
+     bigint_destroy(&i);
+
+    return result;
+}
+
+bigint* l_fact(const bigint* value){
+     bigint* result, *i;
+
+    if (value->sign == NEGATIVE){
+        return NULL;
+    }
+
+    i = bigint_init_chars("2");
+
+    if (!i){
+        return NULL;
+    }
+
+    result = bigint_init_chars("1");
+
+    if (!result){
+        bigint_destroy(&i);
+        return NULL;
+    }
+
+    for (;bigint_cmp(i,value)!=GREATER;){
+        if (!l_mult_assign(&result,i) || !l_inc(i)){
+             bigint_destroy(&i);
+             bigint_destroy(&result);
+            return NULL;
+        }
+    }
+
+    bigint_destroy(&i);
+
+    return result;
+}
+
+int bigint_negate(bigint* value){
+    if (!value){
+        return 0;
+    }
+
+    if (value->sign == POSITIVE){
+        value->sign = NEGATIVE;
+    }else{
+        value->sign = POSITIVE;
+    }
+
+    return 1;
 }

@@ -23,9 +23,9 @@ bigint* bigint_create ();
 
 bigint* bigint_zero();
 
-bigint* bigint_init (const cstring* value, const short int sign);
+bigint* bigint_init (const cstring* value);
 
-bigint* bigint_init_chars (const char* value, const short int sign);
+bigint* bigint_init_chars (const char* value);
 
 bigint* bigint_init_long ( long value);
 
@@ -65,14 +65,28 @@ bigint* l_mult_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_mult (const bigint*  first, const bigint*  second);
 
+int l_mult_assign (bigint** first, const bigint*  second);
+
 bigint* l_mult_long (const bigint*  first, const long second);
 
-bigint* bigint_get_n_first_digits (const bigint* value, size_t n);
+bigint* l_mod (const bigint* first, const bigint* second);
 
-int l_mult_assign (bigint** first, const bigint*  second);
+bigint* l_pow (const bigint* first, const bigint* second);
+
+bigint* l_fact(const bigint* value);
+
+int l_inc(bigint* value);
+
+int bigint_is_zero(const bigint* value);
+
+int bigint_is_one (const bigint* value);
+
+bigint* bigint_get_n_first_digits (const bigint* value, size_t n);
 
 cstring* bigint_to_string(const bigint* value);
 
 int bigint_trim (const bigint* value);
+
+int bigint_negate(bigint* value);
 
 #endif

@@ -1,2 +1,2 @@
-gcc -g src/calc.c src/long_arithmetic/long_arithmetic.c src/utils/cstring/cstring.c src/utils/futils/futils.c src/utils/vector/vector.c src/utils/expression/expression.c
+gcc -g src/calc.c src/long_arithmetic/long_arithmetic.c src/utils/cstring/cstring.c src/utils/futils/futils.c src/utils/vector/vector.c src/utils/expression/expression.c src/calculator/calculator.c
 valgrind --leak-check=full --show-leak-kinds=all ./a.out

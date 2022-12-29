@@ -66,9 +66,6 @@ void string_destroy(cstring** string){
     *string = NULL;
 }
 
-void string_destroy_t(void** string){
-    string_destroy((cstring**)string);
-}
 
 char* reverce_chars (char* chars){
     size_t len;
@@ -143,4 +140,71 @@ char string_char_at(const cstring* string, size_t index){
     c = (char*)vector_at(string->chars, index);
 
     return c==NULL?0:*c;
+}
+
+int string_remove_spaces (cstring* string){
+    vector* new_chars;
+    size_t len,i;
+    char c;
+
+    if (!string){
+        return 0;
+    }
+
+    len = string_size(string);
+
+    new_chars = vector_create(sizeof(char), NULL);
+
+    if (!new_chars){
+        return 0;
+    }
+
+    for(i=0;i<len;++i){
+        c = string_char_at (string,i);
+        if (c!=' ' && c!= '\t'){
+            if (!vector_push_back(new_chars, &c)){
+                vector_destroy(&new_chars);
+                return 0;
+            }
+        }
+    }
+
+
+    vector_destroy(&(string->chars));
+    string->chars = new_chars;
+    if (!append_zero(string)){
+        return 0;
+    }
+    return 1;
+}
+
+int string_lowercase (cstring* string){
+    size_t len,i;
+    char c,lc;
+
+    if (!string){
+        return 0;
+    }
+
+    len = string_size(string);
+
+    for (i=0;i<len;++i){
+        c = string_char_at(string,i);
+        lc = tolower(c);
+        if (c != lc){
+            if (!vector_push(string->chars,&lc,i)){
+                return 0;
+            }
+        }
+    }
+
+    return 1;
+}
+
+int string_isempty (const cstring* string){
+    if (!string){
+        return 1;
+    }
+
+    return string_size(string)<1;
 }

@@ -303,3 +303,14 @@ int vector_push_forward(vector* v, const void* item){
 
     return 1;
 }
+
+void* vector_pop_last(vector* v){
+    void* item;
+    if (!v){
+        return NULL;
+    }
+
+    item = vector_at(v,v->count-1);
+    --v->count;
+    return item;
+}

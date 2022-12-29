@@ -129,4 +129,6 @@ int vector_trim(vector* v);
 
 int vector_resize(vector* v, const size_t size);
 
+void* vector_pop_last(vector* v);
+
 #endif

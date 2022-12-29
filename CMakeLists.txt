@@ -11,6 +11,7 @@ add_executable(calc
     src/utils/vector/vector.c
     src/utils/cstring/cstring.c
     src/utils/expression/expression.c
+    src/calculator/calculator.c
 )
 
 target_link_libraries(calc m)
