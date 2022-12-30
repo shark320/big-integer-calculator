@@ -14,9 +14,9 @@ int main (){
     vector* tokens;
     calculator* calc;
     size_t i;
-    char* operands = "+-/*%^!";
+    char* operands = "+-/*%^!()";
 
-    string1 = string_init("123+24");
+    string1 = string_init("143788010446775248848237875203163336494653562343841/10");
 
     tokens = expression_parse(string1, operands);
 

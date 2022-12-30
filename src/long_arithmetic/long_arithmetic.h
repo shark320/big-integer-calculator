@@ -87,6 +87,6 @@ cstring* bigint_to_string(const bigint* value);
 
 int bigint_trim (const bigint* value);
 
-int bigint_negate(bigint* value);
+bigint* bigint_negate(bigint* value);
 
 #endif

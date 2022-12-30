@@ -314,3 +314,13 @@ void* vector_pop_last(vector* v){
     --v->count;
     return item;
 }
+
+void* vector_peek_last(const vector* v){
+    void* item;
+    if (!v){
+        return NULL;
+    }
+
+    item = vector_at(v,v->count-1);
+    return item;
+}

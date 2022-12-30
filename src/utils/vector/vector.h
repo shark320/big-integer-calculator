@@ -131,4 +131,6 @@ int vector_resize(vector* v, const size_t size);
 
 void* vector_pop_last(vector* v);
 
+void* vector_peek_last(const vector* v);
+
 #endif

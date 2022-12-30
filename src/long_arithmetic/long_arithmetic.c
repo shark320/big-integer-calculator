@@ -879,10 +879,16 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     }
 
     result = bigint_create();
+
+    if (!result){
+        return NULL;
+    }
+
     tmp = bigint_create();
 
-    if (!result || !tmp){
-        return 0;
+    if (!tmp){
+        bigint_destroy(&result);
+        return NULL;
     }
 
     len1 = bigint_size(first);
@@ -890,6 +896,7 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     for (i=len1;i>0;--i){
         d = bigint_digit_at(first,i-1);
         EXIT_IF_NOT (vector_push_forward(tmp->digits,&d));
+        EXIT_IF_NOT (bigint_trim(tmp));
         cmp = bigint_cmp_abs(tmp,second);
         if (cmp==GREATER || cmp==EQUALS){
             div_simple = l_div_simple(tmp,second);
@@ -1020,16 +1027,22 @@ bigint* l_fact(const bigint* value){
     return result;
 }
 
-int bigint_negate(bigint* value){
+bigint* bigint_negate(bigint* value){
+    bigint* result;
     if (!value){
         return 0;
     }
 
-    if (value->sign == POSITIVE){
-        value->sign = NEGATIVE;
-    }else{
-        value->sign = POSITIVE;
+    result = bigint_copy(value);
+    if (!result){
+        return NULL;
     }
 
-    return 1;
+    if (value->sign == POSITIVE){
+        result->sign = NEGATIVE;
+    }else{
+        result->sign = POSITIVE;
+    }
+
+    return result;
 }
