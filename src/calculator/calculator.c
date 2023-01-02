@@ -339,7 +339,7 @@ bigint* calc_calculate(calculator* calc ,const vector* tokens){
             }
         }
         op_prev =0;
-        value = bigint_init(token);
+        value = get_bigint(token);
         if (!value){
             return NULL;
         }

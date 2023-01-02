@@ -29,6 +29,12 @@ bigint* bigint_init_chars (const char* value);
 
 bigint* bigint_init_long ( long value);
 
+bigint* bigint_init_vector(vector* value, signed char sign);
+
+long bigint_to_long (const bigint* value);
+
+vector* bigint_to_bytes (const bigint* value);
+
 void bigint_destroy (bigint** value);
 
 signed char bigint_digit_at (const bigint* value, size_t index);
@@ -61,6 +67,8 @@ bigint* l_div_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_div (const bigint*  first, const bigint*  second);
 
+int l_div_assign (bigint** first, const bigint* second);
+
 bigint* l_mult_abs (const bigint*  first, const bigint*  second);
 
 bigint* l_mult (const bigint*  first, const bigint*  second);
@@ -72,6 +80,8 @@ bigint* l_mult_long (const bigint*  first, const long second);
 bigint* l_mod (const bigint* first, const bigint* second);
 
 bigint* l_pow (const bigint* first, const bigint* second);
+
+bigint* l_pow_long (const bigint* first, const long second);
 
 bigint* l_fact(const bigint* value);
 

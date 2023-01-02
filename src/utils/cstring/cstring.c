@@ -208,3 +208,21 @@ int string_isempty (const cstring* string){
 
     return string_size(string)<1;
 }
+
+int string_clear (cstring* string){
+    vector* new_vector;
+    if (!string){
+        return 0;
+    }
+
+    new_vector = vector_create(sizeof(char), NULL);
+
+    if (!new_vector){
+        return 0;
+    }
+
+    vector_destroy(&string->chars);
+    string->chars = new_vector;
+
+    return append_zero(string);
+}

@@ -95,10 +95,6 @@ bigint* bigint_init_long (long value){
     bigint* new_number;
     char d;
 
-    if (!value){
-        return NULL;
-    }
-
     new_number = bigint_create();
     if (!new_number){
         return NULL;
@@ -126,6 +122,147 @@ bigint* bigint_init_long (long value){
     }
 
     return new_number;
+}
+
+bigint* bigint_init_vector(vector* value, signed char sign){
+    bigint* new_number, *pow, *base_num, *tmp;
+    size_t len,i;
+    int out;
+    unsigned char num;
+
+
+      #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            bigint_destroy(&new_number);   \
+            bigint_destroy(&base_num);   \
+            return NULL;                     \
+        }
+
+    
+    if (!value){
+        return NULL;
+    }
+
+    new_number = bigint_zero();
+
+    if (!new_number){
+        return NULL;
+    }
+
+    base_num = bigint_init_long(256);
+
+    if (!base_num){
+        bigint_destroy(&new_number);
+        return NULL;
+    }
+
+    len = vector_count(value);
+
+    for (i=0;i<len;++i){
+        num = *((char*)vector_at(value,i));
+        EXIT_IF_NOT(pow = l_pow_long(base_num,i));
+        if (! (tmp = l_mult_long(pow,num))){
+            bigint_destroy(&pow);
+            EXIT_IF_NOT(0);
+        }
+        out = l_sum_assign(&new_number,tmp);
+        bigint_destroy(&pow);
+        bigint_destroy(&tmp);
+        EXIT_IF_NOT(out);
+    }
+
+    bigint_destroy(&base_num);
+    new_number->sign = sign;
+
+    #undef EXIT_IF_NOT
+    return new_number;
+}
+
+long bigint_to_long (const bigint* value){
+    long long_value = 0;
+    size_t len,i;
+    signed char d;
+    
+    if (!value){
+        return 0;
+    }
+
+    len = bigint_size(value);
+
+    for (i = len;i>0;--i){
+        d = bigint_digit_at(value,i-1);
+        if (d==-1){
+            return 0;
+        }
+        long_value *=10;
+        long_value += d;
+    }
+
+    if (value->sign == NEGATIVE){
+        long_value = -long_value;
+    }
+
+    return long_value;
+}
+
+vector* bigint_to_bytes (const bigint* value){
+    vector* bytes;
+    bigint* mod=NULL, *copy,*base;
+    char n;
+
+    #define EXIT_IF_NOT(expression)     \
+        if (!(expression)) {            \
+            bigint_destroy(&mod);   \
+            bigint_destroy(&base);   \
+            bigint_destroy(&copy);   \
+            vector_destroy(&bytes);\
+            return NULL;                     \
+        }
+
+    if (!value){
+        return NULL;
+    }
+
+    base = bigint_init_long(256);
+
+    if (!base){
+        return NULL;
+    }
+
+    bytes = vector_create(sizeof(char),NULL);
+
+    if (!bytes){
+        bigint_destroy(&base);
+        return NULL;
+    }
+
+    copy = bigint_copy_abs(value);
+    if (!copy){
+        bigint_destroy(&base);
+        vector_destroy(&bytes);
+        return NULL;
+    }
+
+    do{
+        mod = l_mod(copy,base);
+        if (!mod){
+            bigint_destroy(&base);
+            vector_destroy(&bytes);
+            bigint_destroy(&copy);
+            return NULL;
+        }
+        EXIT_IF_NOT(l_div_assign(&copy,base));
+        n = (char)bigint_to_long(mod);
+        EXIT_IF_NOT(vector_push_back(bytes,&n));
+        bigint_destroy(&mod);
+    }while(!bigint_is_zero(copy));
+
+    bigint_destroy(&base);  
+    bigint_destroy(&copy);   
+
+    #undef EXIT_IF_NOT
+
+    return bytes;
 }
 
 bigint* bigint_zero(){
@@ -936,6 +1073,25 @@ bigint* l_div (const bigint*  first, const bigint*  second){
     return result;
 }
 
+int l_div_assign (bigint** first, const bigint* second){
+    bigint* result;
+    if (!first || !*first || !second){
+        return 0;
+    }
+
+    result = l_div(*first, second);
+
+    if (!result){
+        return 0;
+    }
+
+    bigint_destroy(first);
+
+    *first = result;
+
+    return 1;
+}
+
 bigint* l_mod (const bigint* first, const bigint* second){
     bigint* result, *div, *mult;
 
@@ -990,6 +1146,24 @@ bigint* l_pow (const bigint* first, const bigint* second){
     }
 
      bigint_destroy(&i);
+
+    return result;
+}
+
+bigint* l_pow_long (const bigint* first, const long second){
+    bigint* result, *second_bigint;
+    if (!first){
+        return NULL;
+    }
+
+    second_bigint = bigint_init_long(second);
+    if (!second_bigint){
+        return NULL;
+    }
+
+    result = l_pow(first,second_bigint);
+
+    bigint_destroy (&second_bigint);
 
     return result;
 }

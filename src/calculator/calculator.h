@@ -3,6 +3,7 @@
 
 #include "../utils/vector/vector.h"
 #include "../long_arithmetic/long_arithmetic.h"
+#include "../utils/expression/expression.h"
 
 typedef bigint* (*operator_handler)(vector* stack);
 
