@@ -306,7 +306,7 @@ int vector_push_forward(vector* v, const void* item){
 
 void* vector_pop_last(vector* v){
     void* item;
-    if (!v){
+    if (!v || (v->count == 0)){
         return NULL;
     }
 
