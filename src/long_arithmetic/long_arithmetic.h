@@ -6,6 +6,7 @@
 
 #include "../utils/vector/vector.h"
 #include "../utils/cstring/cstring.h"
+#include "../utils/errors/errors.h"
 
 #define POSITIVE 1
 #define NEGATIVE -1
@@ -79,11 +80,11 @@ bigint* l_mult_long (const bigint*  first, const long second);
 
 bigint* l_mod (const bigint* first, const bigint* second);
 
-bigint* l_pow (const bigint* first, const bigint* second);
+bigint* l_pow (const bigint* first, const bigint* second,int* error);
 
-bigint* l_pow_long (const bigint* first, const long second);
+bigint* l_pow_long (const bigint* first, const long second, int* error);
 
-bigint* l_fact(const bigint* value);
+bigint* l_fact(const bigint* value, int* error);
 
 int l_inc(bigint* value);
 

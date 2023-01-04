@@ -4,8 +4,9 @@
 #include "../utils/vector/vector.h"
 #include "../long_arithmetic/long_arithmetic.h"
 #include "../utils/expression/expression.h"
+#include "../utils/errors/errors.h"
 
-typedef bigint* (*operator_handler)(vector* stack);
+typedef bigint* (*operator_handler)(vector* stack, int* error);
 
 typedef struct {
     vector* values;
@@ -29,22 +30,22 @@ calculator* calc_create();
 
 void calc_destroy(calculator** instance);
 
-bigint* calc_calculate(calculator* calc ,const vector* tokens);
+bigint* calc_calculate(calculator* calc ,const vector* tokens, int* error);
 
-bigint* calc_sum(vector* values);
+bigint* calc_sum(vector* values, int* error);
 
-bigint* calc_mult(vector* values);
+bigint* calc_mult(vector* values, int* error);
 
-bigint* calc_sub(vector* values);
+bigint* calc_sub(vector* values, int* error);
 
-bigint* calc_div(vector* values);
+bigint* calc_div(vector* values, int* error);
 
-bigint* calc_mod(vector* values);
+bigint* calc_mod(vector* values, int* error);
 
-bigint* calc_pow(vector* values);
+bigint* calc_pow(vector* values, int* error);
 
-bigint* calc_negate(vector* values);
+bigint* calc_negate(vector* values, int* error);
 
-bigint* calc_fact(vector* values);
+bigint* calc_fact(vector* values, int* error);
 
 #endif

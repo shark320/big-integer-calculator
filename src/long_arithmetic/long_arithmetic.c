@@ -127,7 +127,7 @@ bigint* bigint_init_long (long value){
 bigint* bigint_init_vector(vector* value, signed char sign){
     bigint* new_number, *pow, *base_num, *tmp;
     size_t len,i;
-    int out;
+    int out,error;
     unsigned char num;
 
 
@@ -160,7 +160,7 @@ bigint* bigint_init_vector(vector* value, signed char sign){
 
     for (i=0;i<len;++i){
         num = *((char*)vector_at(value,i));
-        EXIT_IF_NOT(pow = l_pow_long(base_num,i));
+        EXIT_IF_NOT(pow = l_pow_long(base_num,i,&error));
         if (! (tmp = l_mult_long(pow,num))){
             bigint_destroy(&pow);
             EXIT_IF_NOT(0);
@@ -182,7 +182,7 @@ long bigint_to_long (const bigint* value){
     long long_value = 0;
     size_t len,i;
     signed char d;
-    
+
     if (!value){
         return 0;
     }
@@ -1120,8 +1120,34 @@ bigint* l_mod (const bigint* first, const bigint* second){
     return result;
 }
 
-bigint* l_pow (const bigint* first, const bigint* second){
+bigint* l_pow (const bigint* first, const bigint* second, int* error){
     bigint* result, *i;
+
+    if (!first || !second || !error){
+        return NULL;
+    }
+
+    *error = 0;
+
+    if (bigint_is_zero(second)){
+        return bigint_init_chars("1");
+    }
+
+    if (second->sign == NEGATIVE){
+        if (bigint_is_zero(first)){
+            *error = ZERO_DIVISION;
+            return NULL;
+        }
+        if (bigint_is_one(first)){
+            if (first->sign == POSITIVE){
+                return bigint_init_chars("1");
+            }else{
+                return bigint_init_chars("-1");
+            }
+        }else{
+            return bigint_zero();
+        }
+    }
 
     i = bigint_zero();
 
@@ -1137,6 +1163,8 @@ bigint* l_pow (const bigint* first, const bigint* second){
         return NULL;
     }
 
+
+
     for (;bigint_cmp(i,second)==LESS;){
         if (!l_mult_assign(&result,first) || !l_inc(i)){
              bigint_destroy(&i);
@@ -1150,9 +1178,9 @@ bigint* l_pow (const bigint* first, const bigint* second){
     return result;
 }
 
-bigint* l_pow_long (const bigint* first, const long second){
+bigint* l_pow_long (const bigint* first, const long second, int* error){
     bigint* result, *second_bigint;
-    if (!first){
+    if (!first || !error){
         return NULL;
     }
 
@@ -1161,17 +1189,26 @@ bigint* l_pow_long (const bigint* first, const long second){
         return NULL;
     }
 
-    result = l_pow(first,second_bigint);
+    result = l_pow(first,second_bigint,error);
 
     bigint_destroy (&second_bigint);
 
     return result;
 }
 
-bigint* l_fact(const bigint* value){
+bigint* l_fact(const bigint* value, int* error){
      bigint* result, *i;
 
+    if (!value || !error){
+        return NULL;
+    }
+
+    if (bigint_is_zero(value)){
+        return bigint_init_chars("1");
+    }
+
     if (value->sign == NEGATIVE){
+        *error = NEGATIVE_FACT;
         return NULL;
     }
 
@@ -1210,6 +1247,10 @@ bigint* bigint_negate(bigint* value){
     result = bigint_copy(value);
     if (!result){
         return NULL;
+    }
+
+    if (bigint_is_zero(value)){
+        return result;
     }
 
     if (value->sign == POSITIVE){

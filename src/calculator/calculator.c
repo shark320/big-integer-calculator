@@ -103,11 +103,13 @@ operator_handler get_operator_handler (const char c){
     return NULL;
 }
 
-bigint* calc_sum(vector* values){
+bigint* calc_sum(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -123,11 +125,13 @@ bigint* calc_sum(vector* values){
     return result;
 }
 
-bigint* calc_sub(vector* values){
+bigint* calc_sub(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -143,11 +147,13 @@ bigint* calc_sub(vector* values){
     return result;
 }
 
-bigint* calc_mult(vector* values){
+bigint* calc_mult(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -163,11 +169,13 @@ bigint* calc_mult(vector* values){
     return result;
 }
 
-bigint* calc_div(vector* values){
+bigint* calc_div(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -183,11 +191,13 @@ bigint* calc_div(vector* values){
     return result;
 }
 
-bigint* calc_mod(vector* values){
+bigint* calc_mod(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -203,11 +213,14 @@ bigint* calc_mod(vector* values){
     return result;
 }
 
-bigint* calc_pow(vector* values){
+bigint* calc_pow(vector* values, int* error){
     bigint** first, **second, *result;
-    if (!values){
+
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     second = (bigint**)vector_pop_last(values);
     first = (bigint**)vector_pop_last(values);
@@ -216,18 +229,20 @@ bigint* calc_pow(vector* values){
         return NULL;
     }
 
-    result = l_pow(*first,*second);
+    result = l_pow(*first,*second, error);
     bigint_destroy(first);
     bigint_destroy(second);
 
     return result;
 }
 
-bigint* calc_fact(vector* values){
+bigint* calc_fact(vector* values, int* error){
     bigint** first, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     first = (bigint**)vector_pop_last(values);
 
@@ -235,17 +250,19 @@ bigint* calc_fact(vector* values){
         return NULL;
     }
 
-    result = l_fact(*first);
+    result = l_fact(*first, error);
     bigint_destroy(first);
 
     return result;
 }
 
-bigint* calc_negate(vector* values){
+bigint* calc_negate(vector* values, int* error){
     bigint** first, *result;
-    if (!values){
+    if (!values || !error){
         return NULL;
     }
+
+    *error = 0;
 
     first = (bigint**)vector_pop_last(values);
 
@@ -259,19 +276,24 @@ bigint* calc_negate(vector* values){
     return result;
 }
 
-int add_operator(calculator* calc, l_operator* operator){
+int add_operator(calculator* calc, l_operator* operator, int* error){
     l_operator* last_op;
     bigint* result;
-    if (!calc || !operator){
+    if (!calc || !operator || !error){
         return 0;
     }
+
+    *error = 0;
 
     if (vector_isempty(calc->operators)){
         vector_push_back(calc->operators, &operator);
         return 1;
     }
 
-    while (!vector_isempty(calc->operators)){    
+    while (!vector_isempty(calc->operators)){   
+        if (operator->is_open_bracket){
+            break;
+        } 
         last_op = *((l_operator**)vector_peek_last(calc->operators));
         if (last_op->pecedence >= operator->pecedence){
             if (!last_op->handler){
@@ -286,8 +308,8 @@ int add_operator(calculator* calc, l_operator* operator){
                     }
                 }
             }
-             last_op = *((l_operator**)vector_pop_last(calc->operators));
-            if (!(result = last_op->handler(calc->values))){
+            last_op = *((l_operator**)vector_pop_last(calc->operators));
+            if (!(result = last_op->handler(calc->values, error))){
                 operator_destroy(&last_op);
                 operator_destroy(&operator);
                 return 0;
@@ -305,16 +327,18 @@ int add_operator(calculator* calc, l_operator* operator){
     return vector_push_back(calc->operators, &operator);
 }
 
-bigint* calc_calculate(calculator* calc ,const vector* tokens){
+bigint* calc_calculate(calculator* calc ,const vector* tokens, int* error){
     size_t len,i;
     cstring* token;
     bigint* value;
     l_operator* operator;
-    char c, op_prev = 0;
-    if (!tokens || !calc){
+    char c, op_prev = 1;
+
+    if (!tokens || !calc || !error){
         return NULL;
     }
 
+    *error = 0;
 
     len = vector_count(tokens);
 
@@ -331,7 +355,7 @@ bigint* calc_calculate(calculator* calc ,const vector* tokens){
                 if (!operator){
                     return NULL;
                 }
-                if (!add_operator(calc,operator)){
+                if (!add_operator(calc,operator, error)){
                     return NULL;
                 }
                 op_prev = 1;
@@ -351,13 +375,17 @@ bigint* calc_calculate(calculator* calc ,const vector* tokens){
     while (!vector_isempty(calc->operators)){
         operator =  *((l_operator**)vector_pop_last(calc->operators));
         if (!operator->handler){
+            *error = SYNTAX_ERROR;
             operator_destroy(&operator);
             return NULL;
         }
 
-        value = operator->handler(calc->values);
+        value = operator->handler(calc->values, error);
         operator_destroy(&operator);
         if (!value){
+            if (*error==0){
+                *error = SYNTAX_ERROR;
+            }
             return NULL;
         }
         if (!vector_push_back(calc->values, &value)){
@@ -366,6 +394,7 @@ bigint* calc_calculate(calculator* calc ,const vector* tokens){
     }
 
     if (vector_count(calc->values)!=1){
+        *error = SYNTAX_ERROR;
         return NULL;
     }
     return *((bigint**)vector_pop_last(calc->values));
