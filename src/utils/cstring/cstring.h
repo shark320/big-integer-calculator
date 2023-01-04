@@ -35,6 +35,8 @@ int string_isempty (const cstring* string);
 
 int string_clear (cstring* string);
 
+int string_cmp_chars (const cstring* string1,const char* string2);
+
 /* int string_contains_char(const cstring* string, const char c); */
 
 #endif

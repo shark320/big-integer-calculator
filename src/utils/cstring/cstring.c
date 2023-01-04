@@ -226,3 +226,34 @@ int string_clear (cstring* string){
 
     return append_zero(string);
 }
+
+int string_cmp_chars (const cstring* string1,const char* string2){
+    size_t i,len1,len2;
+    char c1,c2;
+    if (!string1 || string2){
+        return -2;
+    }
+
+    len1 = string_size(string1);
+    len2 = strlen(string2);
+
+    if (len1<len2){
+        return -1;
+    }
+
+    if (len1>len2){
+        return 1;
+    }
+
+    for(i=0;i<len1;++i){
+        c1 = string_char_at(string1,i);
+        c2 = string2[i];
+        if (c1==c2){
+            continue;
+        }
+        return c1<c2?-1:1;
+    }
+
+    return 0;
+
+}
