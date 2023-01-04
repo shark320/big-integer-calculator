@@ -5,8 +5,15 @@
 #include "../cstring/cstring.h"
 #include "../vector/vector.h"
 #include "../../long_arithmetic/long_arithmetic.h"
+#include "../errors/errors.h"
+
+#define HEX 1
+#define BIN 2
+#define DEC 3
 
 vector* expression_parse(cstring* string, char* operands);
+
+
 
 int expression_validate(vector* tokens, char* operands);
 
@@ -33,5 +40,9 @@ int print_dec(const bigint* number);
 int print_hex(const bigint* number);
 
 int print_bin(const bigint* number);
+
+int remove_insignificant(cstring** number, int radix,signed char sign);
+
+int is_expression (const cstring* string, char* operands);
 
 #endif

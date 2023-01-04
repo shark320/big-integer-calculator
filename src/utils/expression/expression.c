@@ -15,6 +15,26 @@ int contains (const char* characters, char c){
     return 0;
 }
 
+int is_expression (const cstring* string, char* operands){
+    size_t i;
+    char c;
+    if (!string || !operands){
+        return 0;
+    }
+
+    for (i=0;i<string_size(string);++i){
+        c = string_char_at(string, i);
+        if (contains(operands,c)){
+            continue;
+        }
+        if (!(c>='0' && c<='9') && (c!='b') && (c!='x') && !(c>='a' && c<='f')){
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 vector* expression_parse(cstring* string, char* operands){
     size_t string_len;
     size_t i;
@@ -455,7 +475,7 @@ vector* hex_from_string (const cstring* number){
             continue;
         }
         if (i==3){
-            if (d>'8'){
+            if (d>'7'){
                 for (j=count;j<2;++j){
                     string_append(tmp,'f');
                 }
@@ -494,7 +514,7 @@ bigint* bigint_from_hex (const cstring* number){
         return NULL;
     }
 
-    if (string_char_at(number,2)>'8'){
+    if (string_char_at(number,2)>'7'){
         invert_bits(hex_number);
         add_one (hex_number);
         sign = NEGATIVE;
@@ -548,12 +568,14 @@ int print_dec(const bigint* number){
 
 int print_hex(const bigint* number){
     vector* bytes;
-    unsigned char d;
+    unsigned char d,c1,c2;
     size_t i;
+    cstring* output;
 
     #define EXIT_IF_NOT(expression)     \
         if (!(expression)) {            \
             vector_destroy(&bytes); \
+            string_destroy(&output); \
             return 0;                     \
         }
 
@@ -567,27 +589,45 @@ int print_hex(const bigint* number){
         return 0;
     }
 
+    output = string_create();
+    if (!output){
+        vector_destroy(&bytes);
+        return 0;
+    }
+
     if (number->sign == NEGATIVE){
         EXIT_IF_NOT(invert_bits(bytes));
         EXIT_IF_NOT(add_one(bytes));
-        printf("0x");
+/*         printf("0x"); */
     }else{
-        printf("0x0");
+/*         printf("0x0"); */
     }
     
 
     for(i=vector_count(bytes);i>0;--i){
         d = *((char*)vector_at(bytes,i-1));
-        if (number->sign == NEGATIVE && i==vector_count(bytes) && d>=0xf0){
-            d -= 0xf0;
+        c1 = d%16;
+        d /= 16;
+        c2 = d%16;
+        if (c2<10){
+            EXIT_IF_NOT(string_append(output,c2+'0'));
+        }else{
+            EXIT_IF_NOT(string_append(output,c2+'a'-10));
         }
-        printf("%x",d);
+        if (c1<10){
+            EXIT_IF_NOT(string_append(output,c1+'0'));
+        }else{
+            EXIT_IF_NOT(string_append(output,c1+'a'-10));
+        }
     }
 
-    printf("\n");
+    EXIT_IF_NOT(remove_insignificant(&output,HEX,number->sign));
+
+    printf("0x%s\n",get_chars(output));
 
 
     vector_destroy(&bytes);
+    string_destroy(&output);
 
     #undef EXIT_IF_NOT
     return 1;
@@ -598,10 +638,12 @@ int print_bin(const bigint* number){
     unsigned char d;
     unsigned char bit;
     size_t i,j;
+    cstring* output;
 
     #define EXIT_IF_NOT(expression)     \
         if (!(expression)) {            \
             vector_destroy(&bytes); \
+            string_destroy(&output); \
             return 0;                     \
         }
 
@@ -615,12 +657,19 @@ int print_bin(const bigint* number){
         return 0;
     }
 
+    output = string_create();
+
+    if (!output){
+        vector_destroy(&bytes);
+        return 0;
+    }
+
     if (number->sign == NEGATIVE){
         EXIT_IF_NOT(invert_bits(bytes));
         EXIT_IF_NOT(add_one(bytes));
-        printf("0b");
+/*         printf("0b"); */
     }else{
-        printf("0b0");
+/*         printf("0b0"); */
     }
     
 
@@ -628,20 +677,86 @@ int print_bin(const bigint* number){
         d = *((char*)vector_at(bytes,i-1));
         for (j=8;j>0;--j){
             bit =  (d>>(j-1))&1;
-            if (i==vector_count(bytes)){
-                if ((number->sign == POSITIVE && bit==0) || (number->sign == NEGATIVE && bit==1 && j!=1)){
-                    continue;
-                }
-            }
-            printf("%d",bit);
+            EXIT_IF_NOT (string_append(output,bit+'0'));
         }
     }
 
-    printf("\n");
+    EXIT_IF_NOT(!remove_insignificant(&output,BIN,number->sign));
+
+    printf("0b%s\n",get_chars(output));
 
 
     vector_destroy(&bytes);
+    string_destroy(&output);
 
     #undef EXIT_IF_NOT
+    return 1;
+}
+
+int remove_insignificant(cstring** number, int radix, signed char sign){
+    cstring* copy;
+    size_t offset=0,i;
+    char c1,c2;
+
+    if (!number || !*number){
+        return 0;
+    }
+
+    if (string_size(*number)<1){
+        return 0;
+    }
+
+    copy = string_create();
+    if (!copy){
+        return 0;
+    }
+
+    for ( offset=0;offset<string_size(*number)-1;++offset){
+        c1 = string_char_at(*number,offset);
+        c2 = string_char_at(*number,offset+1);
+        if (radix == BIN){
+            if (sign==NEGATIVE){
+                if (c1=='1' && c2=='1'){
+                    continue;
+                }else{
+                    break;    
+                }
+            }else{
+                if (c1=='0' && c2=='0'){
+                    continue;
+                }else{
+                    break;
+                }
+            }
+        }else if (radix == HEX){
+            if (sign==NEGATIVE){
+                if (c1=='f' && c2>'7'){
+                    continue;
+                }else{
+                    break;    
+                }
+            }else{
+                if (c1=='0' && c2=='0'){
+                    continue;
+                }else{
+                    break;
+                }
+            }
+        }else{
+            string_destroy(&copy);
+            return 0;
+        }
+    }
+
+    for (i=offset;i<string_size(*number);++i){
+        c1 = string_char_at(*number,i);
+        if (!string_append(copy,c1)){
+            string_destroy(&copy);
+            return 0;
+        }
+    }
+
+    string_destroy(number);
+    *number = copy;
     return 1;
 }
