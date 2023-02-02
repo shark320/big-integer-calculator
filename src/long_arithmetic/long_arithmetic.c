@@ -244,14 +244,20 @@ vector* bigint_to_bytes (const bigint* value){
     }
 
     do{
-        mod = l_mod(copy,base);
+/*         mod = l_mod(copy,base);
         if (!mod){
             bigint_destroy(&base);
             vector_destroy(&bytes);
             bigint_destroy(&copy);
             return NULL;
+        } */
+        EXIT_IF_NOT(l_div_assign(&copy,base,&mod));
+         if (!mod){
+            bigint_destroy(&base);
+            vector_destroy(&bytes);
+            bigint_destroy(&copy);
+            return NULL;
         }
-        EXIT_IF_NOT(l_div_assign(&copy,base));
         n = (char)bigint_to_long(mod);
         EXIT_IF_NOT(vector_push_back(bytes,&n));
         bigint_destroy(&mod);
@@ -648,7 +654,7 @@ int fix_borrow (bigint* value){
             if (i==len-1){
                 return 0;
             }
-            borrow = abs(d)/10 + 1;
+            borrow = abs(d+1)/10 + 1;
             *((char*)vector_at(value->digits,i))+=borrow*10;
             *((char*)vector_at(value->digits,i+1))-=borrow;
         }
@@ -988,7 +994,7 @@ int l_div_simple (const bigint* first, const bigint* second){
     return count;
 }
 
-bigint* l_div_abs (const bigint* first, const bigint* second){
+bigint* l_div_abs (const bigint* first, const bigint* second, bigint** mod_abs){
     bigint* result, *tmp,*approx;
     size_t len1,i;
     int cmp, div_simple;
@@ -996,6 +1002,7 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
 
      #define EXIT_IF_NOT(expression)     \
         if (!(expression)) {            \
+            printf("return at i=%d\n",i); \
             bigint_destroy(&result);   \
             bigint_destroy(&tmp);   \
             return NULL;                     \
@@ -1012,6 +1019,7 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     }
 
     if (cmp==LESS){
+        *mod_abs = bigint_copy_abs(first);
         return bigint_zero();
     }
 
@@ -1031,6 +1039,9 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     len1 = bigint_size(first);
 
     for (i=len1;i>0;--i){
+        if (i==16382){
+            printf("");
+        }
         d = bigint_digit_at(first,i-1);
         EXIT_IF_NOT (vector_push_forward(tmp->digits,&d));
         EXIT_IF_NOT (bigint_trim(tmp));
@@ -1046,7 +1057,15 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
         }
     }
 
-    bigint_destroy(&tmp);
+/*     printf("tmp: %s\n",get_chars(bigint_to_string(tmp)));
+
+    bigint_destroy(&tmp); */
+
+    if(mod_abs){
+        *mod_abs = tmp; 
+    }else{
+        bigint_destroy(&tmp);
+    }
     EXIT_IF_NOT(vector_reverse(result->digits));
     EXIT_IF_NOT(bigint_trim(result));
 
@@ -1055,10 +1074,10 @@ bigint* l_div_abs (const bigint* first, const bigint* second){
     return result;
 }
 
-bigint* l_div (const bigint*  first, const bigint*  second){
+bigint* l_div (const bigint*  first, const bigint*  second, bigint** mod_abs){
     bigint* result;
 
-    result = l_div_abs(first, second);
+    result = l_div_abs(first, second, mod_abs);
 
     if (!result){
         return NULL;
@@ -1073,13 +1092,13 @@ bigint* l_div (const bigint*  first, const bigint*  second){
     return result;
 }
 
-int l_div_assign (bigint** first, const bigint* second){
+int l_div_assign (bigint** first, const bigint* second,bigint** mod_abs){
     bigint* result;
     if (!first || !*first || !second){
         return 0;
     }
 
-    result = l_div(*first, second);
+    result = l_div(*first, second,mod_abs);
 
     if (!result){
         return 0;
@@ -1095,7 +1114,7 @@ int l_div_assign (bigint** first, const bigint* second){
 bigint* l_mod (const bigint* first, const bigint* second){
     bigint* result, *div, *mult;
 
-    div = l_div(first,second);
+    div = l_div(first,second,NULL);
 
     if (!div){
         return NULL;

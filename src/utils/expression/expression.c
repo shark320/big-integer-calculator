@@ -681,7 +681,7 @@ int print_bin(const bigint* number){
         }
     }
 
-    EXIT_IF_NOT(!remove_insignificant(&output,BIN,number->sign));
+    EXIT_IF_NOT(remove_insignificant(&output,BIN,number->sign));
 
     printf("0b%s\n",get_chars(output));
 

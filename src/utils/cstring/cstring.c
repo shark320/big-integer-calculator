@@ -230,7 +230,7 @@ int string_clear (cstring* string){
 int string_cmp_chars (const cstring* string1,const char* string2){
     size_t i,len1,len2;
     char c1,c2;
-    if (!string1 || string2){
+    if (!string1 || !string2){
         return -2;
     }
 

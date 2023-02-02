@@ -184,7 +184,7 @@ bigint* calc_div(vector* values, int* error){
         return NULL;
     }
 
-    result = l_div(*first,*second);
+    result = l_div(*first,*second,NULL);
     bigint_destroy(first);
     bigint_destroy(second);
 

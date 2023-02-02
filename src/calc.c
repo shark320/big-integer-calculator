@@ -8,13 +8,18 @@
 #include "calculator/calculator.h"
 #include "utils/errors/errors.h"
 
-#define PROMPT ">\n"
+#define PROMPT ">"
 
 #define DEC_CMD "dec"
+#define DEC_CODE 1
 #define BIN_CMD "bin"
+#define BIN_CODE 2
 #define HEX_CMD "hex"
+#define HEX_CODE 3
 #define OUT_CMD "out"
+#define OUT_CODE 4
 #define QUIT_CMD "quit"
+#define QUIT_CODE 5
 
 cstring* read_line_cmp(){
     char c;
@@ -26,7 +31,7 @@ cstring* read_line_cmp(){
         return NULL;
     }
 
-    while( (c = getchar) != '\n'){
+    while( (c = getchar()) != '\n'){
         if(!string_append(string,c)){
             string_destroy(&string);
             return NULL;
@@ -36,12 +41,24 @@ cstring* read_line_cmp(){
     return string;
 }
 
-int process_command(cstring* command){
+int get_command(cstring* command){
     if (!command){
-        return;
+        return -1;
     }
 
-    if
+    if (string_cmp_chars(command,BIN_CMD)==0){
+        return BIN_CODE;
+    }else  if(string_cmp_chars(command, HEX_CMD)==0){
+        return HEX_CODE;
+    }else  if(string_cmp_chars(command, DEC_CMD)==0){
+        return DEC_CODE;
+    }else  if(string_cmp_chars(command, OUT_CMD)==0){
+        return OUT_CODE;
+    }else  if(string_cmp_chars(command, QUIT_CMD)==0){
+        return QUIT_CODE;
+    }else{
+        return -1;
+    }
 }
 
 void print_error(int error, cstring* command){
@@ -68,12 +85,13 @@ int calculate (FILE* file){
     bigint* result;
     char* operands = "+-/*%^!()";
     int error;
-    int out = DEC;
+    int out = BIN;
+    int cmdc;
 
     calc = calc_create();
 
     if (!calc){
-        return;
+        return EXIT_FAILURE;
     }
 
     for(;;){
@@ -83,31 +101,71 @@ int calculate (FILE* file){
 
         if (!file){
             input = read_line_cmp();
+            /* input = string_init("dec"); */
         }
 
         if (!input){
-            return;
+            return EXIT_FAILURE;
         }
 
-        tokens = expression_parse(input,operands);
-
-        if (!tokens){
-            string_destroy(&input);
-            calc_destroy(&calc);
-            return;
-        }
-
-        result = calc_calculate(calc,tokens,&error);
-
-        if (!result){
-            if (error!=0){
-                print_error(error,NULL);
+        if (!is_expression(input,operands)){
+            cmdc = get_command(input);
+            if (cmdc==BIN_CODE){
+                out=BIN;
+            }else if (cmdc==DEC_CODE){
+                out=DEC;
+            }else if (cmdc==HEX_CODE){
+                out=HEX;
+            }else if (cmdc==QUIT_CODE){
+                string_destroy(&input);
+                calc_destroy(&calc);
+                return EXIT_SUCCESS;
+            }else if (cmdc==OUT_CODE){
+                if (out == BIN){
+                    printf("%s\n",BIN_CMD);
+                }else if (out==DEC){
+                    printf("%s\n",DEC_CMD);
+                }else{
+                    printf("%s\n",HEX_CMD);
+                }
             }else{
-                return;
+                print_error(SYNTAX_ERROR, input);
+            }
+        }else{
+
+            tokens = expression_parse(input,operands);
+
+            if (!tokens){
+                string_destroy(&input);
+                calc_destroy(&calc);
+                return EXIT_FAILURE;
+            }
+
+            result = calc_calculate(calc,tokens,&error);
+
+            if (!result){
+                if (error!=0){
+                    print_error(error,NULL);
+                }else{
+                    return EXIT_FAILURE;
+                }
+            }else{
+                if (out==BIN){
+                    print_bin(result);
+                }else if (out==DEC){
+                    print_dec(result);
+                }else if (out==HEX){
+                    print_hex(result);
+                }
+
+                
             }
         }
-
+        bigint_destroy(&result);
+        vector_destroy(&tokens);
     }
+
+    return EXIT_FAILURE;
 }
 
 
@@ -121,7 +179,7 @@ int main (){
     unsigned char d;
     char* operands = "+-/*%^!()";
 
-    string1 = string_init("10+10+");
+    string1 = string_init("5040!");
 
     string2 = string_init("0xf8");
 
@@ -137,15 +195,17 @@ int main (){
 
     } */
 
+    /* calculate(NULL); */
+
     calc = calc_create();
     result = calc_calculate(calc,tokens, &error);
     printf("error: %d\n",error);
 /*     result = get_bigint(string2); */
 /*     result2 = calc_calculate(calc,tokens); */
 
-    print_bin(result);
+/*     print_bin(result); */
     print_hex(result);
-    print_dec(result);
+/*     print_dec(result); */
     calc_destroy(&calc);
 
     string_destroy(&string1);

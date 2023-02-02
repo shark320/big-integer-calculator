@@ -64,11 +64,11 @@ int l_sub_assign (bigint**  first, const bigint*  second);
 
 int l_div_simple (const bigint* first, const bigint* second);
 
-bigint* l_div_abs (const bigint*  first, const bigint*  second);
+bigint* l_div_abs (const bigint*  first, const bigint*  second,bigint** mod_abs);
 
-bigint* l_div (const bigint*  first, const bigint*  second);
+bigint* l_div (const bigint*  first, const bigint*  second,bigint** mod_abs);
 
-int l_div_assign (bigint** first, const bigint* second);
+int l_div_assign (bigint** first, const bigint* second,bigint** mod_abs);
 
 bigint* l_mult_abs (const bigint*  first, const bigint*  second);
 
